@@ -26,9 +26,9 @@ Aplicația va include și un **asistent conversațional AI**, care va răspunde 
 
 ## Echipa
 
-- Student 1: TODO
-- Student 2: TODO
-- Student 3: TODO
+- Student 1: Avram Darius        
+- Student 2: Vancea Paul
+- Student 3: Sima Alin
 
 ## Scenariul IoT
 
