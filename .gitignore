@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+data/runtime/*
+!data/runtime/.gitkeep
+simulation/intersection/results/*
+!simulation/intersection/results/.gitkeep
+*.log

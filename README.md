@@ -1,79 +1,68 @@
-# TrafficCast — Predicția cozilor la o intersecție semaforizată
+# TrafficCast — semafoare inteligente pentru fluidizarea traficului
 
 ## Echipa
 
-- Student 1: Avram Darius        
+- Student 1: Avram Darius
 - Student 2: Vancea Paul
 - Student 3: Sima Alin
 
-## Scenariul proiectului
+## Scenariu și scop
 
-TrafficCast simulează o intersecție rutieră semaforizată folosind **[SUMO](https://sumo.dlr.de/)** (Simulation of Urban MObility). Vehiculele, fluxurile de trafic, semafoarele și detectoarele sunt virtuale; nu este necesar hardware rutier real.
+TrafficCast simulează o intersecție cu patru brațe în [SUMO](https://sumo.dlr.de/). Scopul final este fluidizarea traficului prin adaptarea semafoarelor la cererea observată. Vom compara controlul adaptiv cu semaforizarea fixă, folosind timpul de așteptare, cozile și numărul de vehicule evacuate. Toate componentele rutiere sunt simulate.
 
-Pentru prima versiune se va modela o singură intersecție cu patru brațe și semaforizare cu timp fix. Detectoarele virtuale **E2** vor furniza indicatori precum viteza medie, ocuparea și lungimea cozilor. Ulterior, proiectul poate fi extins la două intersecții sau la semaforizare adaptivă.
+Etapa implementată acum: **mai multe procese senzor transmit date către un proces gateway**. Scenariul are semafoare cu timpi ficși; controlul adaptiv urmează după validarea comunicației.
 
-## Arhitectura inițială
+## Arhitectura implementată
 
 ```text
-SUMO — intersecție, vehicule, semafoare și detectoare E2
-        |
-        v
-Export date simulate (CSV/Parquet)
-        |
-        v
-replay.py — Raspberry Pi sau mediu local
-        |
-        v
-MQTT — Mosquitto
-        |
-        v
-Consumator de mesaje + inferență ML
-        |
-        v
-SQLite — măsurători și predicții
-        |
-        v
-Dashboard — Streamlit
+SUMO → adaptor Python TraCI → 4 procese senzor → MQTT / Mosquitto → gateway → SQLite
+                                  N / E / S / W
 ```
 
-SUMO va genera scenarii repetabile pentru antrenare și evaluare. Datele generate pot fi exportate din detectoare în CSV/Parquet și redate prin `replay.py`, în concordanță cu scheletul IoT al disciplinei. Ca extensie, Python poate citi direct simularea în execuție prin **TraCI** și publica măsurătorile prin MQTT, fără etapa de replay.
+Un singur adaptor citește SUMO și distribuie măsurătorile prin cozi locale. Fiecare proces senzor publică pe propriul topic MQTT. Gateway-ul validează mesajele, elimină duplicatele și salvează măsurătorile. Toate măsurătorile provin direct din simularea SUMO în execuție. Jurnalele păstrează același identificator de mesaj la citire, publicare și recepție. Un observator MQTT independent arată mesajele livrate de broker.
 
-Modelul ML va fi antrenat offline în Python sau Google Colab, apoi exportat și încărcat de aplicație. Un asistent conversațional LLM cu tool calling/MCP poate fi adăugat ulterior pentru întrebări despre măsurători și predicții; nu este necesar pentru funcționarea versiunii inițiale.
+## Pornire
 
-## Scopul final
+Instrucțiuni complete: **[docs/pornire.md](docs/pornire.md)**. Din rădăcina repository-ului, pe Fedora:
 
-Realizarea unui prototip IoT care estimează lungimea cozilor la o intersecție simulată pentru următoarele **30–60 de secunde**, afișează valorile și predicțiile într-un dashboard și permite evaluarea preciziei atunci când unii detectori devin temporar indisponibili.
+```bash
+sudo dnf install python3 python3-pip mosquitto
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
+bash scripts/demo.sh
+```
 
-## Obiective
+Demonstrație cu SUMO instalat deja, inclusiv prin Flatpak:
 
-1. Construirea intersecției, a rutelor și a programului semafoarelor în SUMO, folosind NetEdit sau instrumentele de generare a rețelei.
-2. Amplasarea detectoarelor E2 pe apropierile intersecției și colectarea indicatorilor de trafic.
-3. Generarea mai multor scenarii controlate: trafic redus, moderat și intens, fluxuri dezechilibrate și semințe de simulare diferite.
-4. Antrenarea și compararea unui model de bază cu un model ML, inițial **persistență** versus **Random Forest Regressor**.
-5. Simularea pierderilor de date sau a indisponibilității unor detectoare și măsurarea efectului asupra erorii predicțiilor.
-6. Transmiterea datelor prin MQTT, stocarea lor în SQLite și afișarea măsurătorilor, cozilor estimate și alertelor în dashboard.
+```bash
+bash scripts/demo.sh --gui --steps 120 --pace 1
+```
 
-## Întrebarea de cercetare
+În alte terminale: `tail -f data/runtime/mqtt.log` și `tail -f data/runtime/gateway.log`. Datele se salvează în `data/runtime/trafficcast.sqlite3`. Scriptul demo pornește SUMO-GUI, cele patru procese senzor, brokerul local, observatorul și gateway-ul, apoi închide componentele la terminare; portul 1883 trebuie să fie liber.
 
-**Cât de precis poate fi estimată lungimea viitoare a cozilor la o intersecție semaforizată pe baza istoricului detectoarelor și a stării semaforului și în ce măsură indisponibilitatea detectorilor degradează predicția?**
+## Organizare
 
-Evaluarea va folosi MAE și RMSE. Seturile de antrenare, validare și test vor proveni din rulări separate ale simulatorului, pentru a verifica generalizarea la scenarii care nu au fost folosite la antrenare. Valorile de referință ale cozilor din SUMO vor fi păstrate separat de intrările disponibile modelului.
+| Director | Conținut |
+|---|---|
+| `simulation/intersection/` | Rețea SUMO generată, surse XML, trafic, semafoare și detectoare |
+| `src/trafficcast/` | Adaptor SUMO, procese senzor, observator MQTT, gateway și jurnalizare |
+| `config/` | Configurația brokerului Mosquitto local |
+| `scripts/` | Pornirea simulării, regenerarea rețelei și demonstrația completă |
+| `data/runtime/` | Baza SQLite și jurnale locale, excluse din Git |
+| `docs/` | Instrucțiuni, arhitectură și protocol |
+| `tests/` | Validare date, SQLite și teste cu broker/SUMO real |
 
-## Tehnologii propuse
+Urmărirea unei măsurători, pas cu pas: [docs/transmisie.md](docs/transmisie.md).
 
-- **Simulare trafic:** SUMO, SUMO-GUI, NetEdit
-- **Integrare și procesare:** Python, TraCI, pandas, NumPy
-- **Comunicare:** MQTT, Mosquitto
-- **Machine Learning:** scikit-learn
-- **Stocare:** SQLite
-- **Dashboard:** Streamlit
-- **Antrenare și analiză:** Jupyter Notebook / Google Colab
+## Următoarea etapă
+
+Implementarea controlerului adaptiv și a comenzilor către SUMO prin TraCI, cu păstrarea fazelor compatibile, a galbenului, a intervalelor de degajare și a unei limite de așteptare. Predicția cozilor cu ML poate fi o extensie a controlerului.
 
 ## Bibliografie
 
-1. Eclipse SUMO, *Simulation of Urban MObility — documentație oficială*: https://sumo.dlr.de/docs/
-2. Eclipse SUMO, *NetEdit — creare și editare a rețelelor*: https://sumo.dlr.de/docs/Netedit/index.html
-3. Eclipse SUMO, *Lane-area Detectors (E2)*: https://sumo.dlr.de/docs/Simulation/Output/Lanearea_Detectors_(E2).html
-4. Eclipse SUMO, *TraCI — interfață Python pentru simularea în execuție*: https://sumo.dlr.de/docs/TraCI/Interfacing_TraCI_from_Python.html
-5. Eclipse SUMO, *Queue Output — măsurarea cozilor*: https://sumo.dlr.de/docs/Simulation/Output/QueueOutput.html
-6. scikit-learn, *RandomForestRegressor*: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html
+- [SUMO și TraCI](https://sumo.dlr.de/docs/TraCI/Interfacing_TraCI_from_Python.html)
+- [Detectoare E2](https://sumo.dlr.de/docs/Simulation/Output/Lanearea_Detectors_(E2).html)
+- [Semaforizarea în SUMO](https://sumo.dlr.de/docs/Simulation/Traffic_Lights.html)
+- [Eclipse Paho MQTT Python](https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html)
+- [Eclipse Mosquitto](https://mosquitto.org/)
