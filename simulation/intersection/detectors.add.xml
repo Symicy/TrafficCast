@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<additional>
+    <laneAreaDetector id="E2_N" lane="N_in_0" pos="-151" endPos="-1" period="1" file="results/e2.xml" timeThreshold="1" speedThreshold="1.39" jamThreshold="10"/>
+    <laneAreaDetector id="E2_E" lane="E_in_0" pos="-151" endPos="-1" period="1" file="results/e2.xml" timeThreshold="1" speedThreshold="1.39" jamThreshold="10"/>
+    <laneAreaDetector id="E2_S" lane="S_in_0" pos="-151" endPos="-1" period="1" file="results/e2.xml" timeThreshold="1" speedThreshold="1.39" jamThreshold="10"/>
+    <laneAreaDetector id="E2_W" lane="W_in_0" pos="-151" endPos="-1" period="1" file="results/e2.xml" timeThreshold="1" speedThreshold="1.39" jamThreshold="10"/>
+    <inductionLoop id="E1_N_out" lane="N_out_0" pos="10" period="1" file="results/e1.xml"/>
+    <inductionLoop id="E1_E_out" lane="E_out_0" pos="10" period="1" file="results/e1.xml"/>
+    <inductionLoop id="E1_S_out" lane="S_out_0" pos="10" period="1" file="results/e1.xml"/>
+    <inductionLoop id="E1_W_out" lane="W_out_0" pos="10" period="1" file="results/e1.xml"/>
+</additional>
