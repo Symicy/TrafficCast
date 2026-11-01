@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <input>
+        <net-file value="intersection.net.xml"/>
+        <route-files value="traffic.rou.xml"/>
+        <additional-files value="detectors.add.xml"/>
+    </input>
+    <time><begin value="0"/><end value="2400"/><step-length value="1"/></time>
+    <random_number><seed value="42"/></random_number>
+    <output>
+        <tripinfo-output value="results/tripinfo.xml"/>
+        <tripinfo-output.write-unfinished value="true"/>
+        <summary-output value="results/summary.xml"/>
+        <vehroute-output value="results/vehroute.xml"/>
+    </output>
+    <gui_only><gui-settings-file value="gui.settings.xml"/></gui_only>
+</configuration>

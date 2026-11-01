@@ -10,4 +10,8 @@ data/runtime/*
 !data/runtime/.gitkeep
 simulation/intersection/results/*
 !simulation/intersection/results/.gitkeep
+simulation/intersection-urban/results/*
+!simulation/intersection-urban/results/.gitkeep
 *.log
+AGENTS.md
+docs/context-proiect.md

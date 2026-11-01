@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+    <vType id="car" accel="2.6" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="13.89"/>
+    <route id="NS" edges="N_in S_out"/>
+    <route id="NE" edges="N_in E_out"/>
+    <route id="NW" edges="N_in W_out"/>
+    <route id="EW" edges="E_in W_out"/>
+    <route id="ES" edges="E_in S_out"/>
+    <route id="EN" edges="E_in N_out"/>
+    <route id="SN" edges="S_in N_out"/>
+    <route id="SW" edges="S_in W_out"/>
+    <route id="SE" edges="S_in E_out"/>
+    <route id="WE" edges="W_in E_out"/>
+    <route id="WN" edges="W_in N_out"/>
+    <route id="WS" edges="W_in S_out"/>
+    <routeDistribution id="routes_N" routes="NE NS NW" probabilities="0.2 0.6 0.2"/>
+    <routeDistribution id="routes_E" routes="ES EW EN" probabilities="0.2 0.6 0.2"/>
+    <routeDistribution id="routes_S" routes="SW SN SE" probabilities="0.2 0.6 0.2"/>
+    <routeDistribution id="routes_W" routes="WN WE WS" probabilities="0.2 0.6 0.2"/>
+    <flow id="flow_N" type="car" route="routes_N" begin="0" end="1800" period="7.5" departLane="best" departSpeed="max"/>
+    <flow id="flow_E" type="car" route="routes_E" begin="1" end="1800" period="12" departLane="best" departSpeed="max"/>
+    <flow id="flow_S" type="car" route="routes_S" begin="2" end="1800" period="7.5" departLane="best" departSpeed="max"/>
+    <flow id="flow_W" type="car" route="routes_W" begin="3" end="1800" period="12" departLane="best" departSpeed="max"/>
+</routes>

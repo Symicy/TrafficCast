@@ -1,17 +1,17 @@
 """Abonat independent pentru observarea mesajelor livrate de broker."""
 
-import signal
-from threading import Event
-
 from .messages import Measurement
+from .runtime import Shutdown
 from .tracing import trace
 from .transport import close, connect
 
 
 def run_monitor(host, port):
-    stop = Event()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        signal.signal(sig, lambda *_: stop.set())
+    with Shutdown() as stop:
+        _run_monitor(host, port, stop)
+
+
+def _run_monitor(host, port, stop):
 
     def on_message(client, userdata, packet):
         try:

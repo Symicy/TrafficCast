@@ -6,6 +6,7 @@ import signal
 import time
 
 from .messages import DIRECTIONS, Measurement
+from .runtime import Shutdown
 from .sources import sumo_frames
 from .tracing import trace
 from .transport import close, connect, publish
@@ -14,6 +15,8 @@ from .transport import close, connect, publish
 def sensor_worker(direction, incoming, acknowledgements, host, port):
     # Părintele gestionează Ctrl+C și închide coordonat procesele copil.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+    if hasattr(signal, "SIGBREAK"):
+        signal.signal(signal.SIGBREAK, signal.SIG_IGN)
     client = None
     try:
         client = connect(host, port, f"sensor-{direction}")
@@ -54,14 +57,15 @@ def wait_for(acknowledgements, workers, expected):
 
 
 def run_sensors(args):
+    with Shutdown() as stop:
+        _run_sensors(args, stop)
+
+
+def _run_sensors(args, stop):
     # Validează run_id înainte de a porni procesele sau simularea.
     Measurement(args.run_id, "E2_N", "N", 1, 0, "sumo", 0, None, 0, 0, 0, 0)
-    frames = sumo_frames(args.scenario, args.steps, args.gui, args.sumo_backend)
-
-    def terminate(*_):
-        raise KeyboardInterrupt
-
-    previous_handler = signal.signal(signal.SIGTERM, terminate)
+    frames = sumo_frames(args.scenario, args.steps, args.gui, args.sumo_backend, args.continuous,
+                         seed=args.seed, profile=args.profile, demand_duration=args.demand_duration)
     context = mp.get_context("spawn")
     acknowledgements = context.Queue()
     queues = {direction: context.Queue(maxsize=2) for direction in DIRECTIONS}
@@ -78,6 +82,8 @@ def run_sensors(args):
         wait_for(acknowledgements, workers, "ready")
         count = 0
         for sequence, frame in enumerate(frames, 1):
+            if stop.is_set():
+                break
             active = {d: w for d, w in workers.items() if w.is_alive()}
             if not active:
                 raise RuntimeError("Toate procesele senzor s-au oprit")
@@ -92,8 +98,8 @@ def run_sensors(args):
                     queues[direction].put(message, timeout=2)
                     count += 1
             wait_for(acknowledgements, active, sequence)
-            if args.pace:
-                time.sleep(args.pace)
+            if stop.wait(args.pace):
+                break
         print(f"FLUX_TERMINAT run={args.run_id} mesaje_trimise={count}", flush=True)
     finally:
         try:
@@ -114,4 +120,3 @@ def run_sensors(args):
         for queue in [*queues.values(), acknowledgements]:
             queue.cancel_join_thread()
             queue.close()
-        signal.signal(signal.SIGTERM, previous_handler)

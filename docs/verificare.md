@@ -1,4 +1,59 @@
-# Verificare locală — 31 octombrie 2026
+# Verificări
+
+## Windows — 1 noiembrie 2026
+
+Mediu: Python 3.14.0, SUMO nativ 1.28.0, Mosquitto 2.1.2, paho-mqtt 2.1.0,
+TraCI și sumolib 1.28.0. Dependențele au fost instalate în mediul virtual al proiectului.
+
+- **59 de teste trecute**, cu `TRAFFICCAST_TEST_SUMO=1`, fără teste omise.
+- Cele două scenarii sunt verificate cu SUMO și broker Mosquitto real.
+- Sunt verificate schema v2 pe bandă, compatibilitatea v1 și extinderea bazei
+  existente fără pierderea rândurilor, golurile de secvență și citirile indisponibile.
+- Gateway-ul este verificat ca receptor de date: nu publică decizii de
+  semaforizare, iar sursa păstrează programul fix chiar dacă pe broker există
+  mesaje externe pe un topic de comenzi.
+- Demonstrația de 120 de pași produce **480 de măsurători**, cu payload-uri
+  identice la citire, publicare, PUBACK, observare, recepție și salvare în SQLite.
+- Sunt verificate brokerul propriu, folosirea unui broker extern și păstrarea
+  acestuia după oprire, portul ocupat, căile cu spații și oprirea unui senzor.
+- Agregarea verifică viteza ponderată, ocuparea, coada maximă, citirile fără viteză
+  și detectoarele lipsă.
+- Modul continuu este verificat cu un final de cerere scurtat în copii temporare:
+  vehicule noi apar după final, timpul nu se resetează și oprirea coordonată
+  păstrează toate mesajele confirmate în SQLite și în observator.
+- Rularea finită completă a fiecărui scenariu introduce și evacuează **780 de
+  vehicule**, fără coliziuni, teleportări, vehicule eliminate sau neterminate.
+  În scenariul urban sunt folosite toate cele 12 rute și ambele benzi pentru înainte.
+- Numărarea trecerilor E1 finalizate produce 780 pentru fiecare scenariu,
+  cu deduplicare inclusiv la schimbarea benzii în zona detectorului.
+- SUMO-GUI a fost pornit automat prin TraCI pentru 5 pași și s-a închis după
+  terminare. Această verificare confirmă pornirea și închiderea, nu reprezintă
+  o inspecție vizuală completă a aspectului.
+- Demonstrația completă cu GUI și brokerul existent a salvat 20 de mesaje
+  pentru 5 pași și a închis automat procesele proprii și SUMO-GUI.
+- Profilurile variabile sunt verificate și în modul continuu, inclusiv
+  depășirea duratei unui ciclu și păstrarea stării simulării.
+- Sintaxa scripturilor Bash a fost verificată cu Git Bash.
+
+Brokerul instalat ca serviciu a fost verificat printr-o conexiune MQTT 3.1.1
+și a rămas pornit. Testele folosesc porturi și copii temporare de scenariu.
+
+Compatibilitatea Linux este păstrată în implementarea comună și în ghid;
+suita versiunii noi **nu a fost rerulată pe Linux în această sesiune**.
+Este disponibil numai WSL docker-desktop, iar motorul Docker nu rulează.
+Verificarea Fedora de mai jos privește versiunea inițială.
+
+Reproducere pe Windows:
+
+```powershell
+$env:TRAFFICCAST_TEST_SUMO = '1'
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m trafficcast demo --external-broker --steps 120 --pace 0
+```
+
+Comenzile Linux și instrucțiunile complete sunt în [pornire.md](pornire.md).
+
+## Istoric Fedora — 31 octombrie 2026
 
 Flux verificat: **SUMO în execuție → TraCI → patru procese senzor → Mosquitto → gateway → SQLite**, cu observator MQTT independent.
 

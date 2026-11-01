@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tlLogics>
+    <tlLogic id="J0" type="static" programID="fixed" offset="0">
+        <phase duration="30" state="GGGgrrrrGGGgrrrr" name="NS_verde_stanga_cedeaza"/>
+        <phase duration="3" state="yyyyrrrryyyyrrrr" name="NS_galben"/>
+        <phase duration="2" state="rrrrrrrrrrrrrrrr" name="degajare_NS"/>
+        <phase duration="30" state="rrrrGGGgrrrrGGGg" name="EV_verde_stanga_cedeaza"/>
+        <phase duration="3" state="rrrryyyyrrrryyyy" name="EV_galben"/>
+        <phase duration="2" state="rrrrrrrrrrrrrrrr" name="degajare_EV"/>
+    </tlLogic>
+</tlLogics>

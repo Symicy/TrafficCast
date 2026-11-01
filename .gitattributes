@@ -1,0 +1,2 @@
+# Păstrează terminatoarele LF pentru Bash, inclusiv la checkout pe Windows.
+*.sh text eol=lf

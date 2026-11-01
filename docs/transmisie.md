@@ -1,52 +1,83 @@
-# Cum demonstrăm transmiterea datelor din SUMO la gateway
-
-## Fluxul demonstrat
+# Cum demonstrăm transmiterea datelor
 
 ```text
-Detectoare SUMO → TraCI → adaptor → 4 procese senzor → Mosquitto → gateway → SQLite
-                                                       └────→ observator MQTT
+Detectoare SUMO → TraCI → adaptor → 4 procese senzor → broker → gateway → SQLite
+                                                        └──→ monitor MQTT
 ```
 
-SUMO generează măsurătorile prin simularea vehiculelor. Python le citește și le publică în timp ce simularea rulează. Cele patru procese senzor respectă cerința de mai mulți emițători; nu inventează valori. Toate mesajele au `source="sumo"`.
+SUMO generează măsurătorile prin simularea vehiculelor. Python le citește și le
+publică în timp ce simularea rulează. Mesajele v2 includ rezumatul pe direcție
+și citirile individuale ale benzilor; toate au `source="sumo"`.
 
-## Demonstrație în trei ferestre
+## Demonstrație
 
-1. Rulează `bash scripts/demo.sh`. În aceeași fereastră vezi evenimentele adaptorului și ale proceselor senzor; SUMO-GUI arată traficul.
-2. În alt terminal rulează `tail -f data/runtime/mqtt.log`: vezi mesajele primite de observator direct de la broker.
-3. În alt terminal rulează `tail -f data/runtime/gateway.log`: vezi recepția și salvarea acelorași măsurători.
+Windows, cu serviciul Mosquitto pornit:
 
-În primele secunde este normal ca detectoarele să nu observe vehicule încă; așteaptă ca acestea să ajungă lângă intersecție.
+```powershell
+.\.venv\Scripts\python.exe -m trafficcast demo --external-broker --gui --continuous
+```
 
-## Ce urmărim pentru o măsurătoare
+În alte terminale:
+
+```powershell
+Get-Content .\data\runtime\mqtt.log -Encoding utf8 -Wait
+Get-Content .\data\runtime\gateway.log -Encoding utf8 -Wait
+```
+
+Linux, cu broker pornit de demonstrație:
+
+```bash
+.venv/bin/python -m trafficcast demo --gui --continuous
+tail -f data/runtime/mqtt.log
+tail -f data/runtime/gateway.log
+```
+
+Pentru o captură finită folosește `--steps 120 --pace 1` în loc de
+`--continuous`. La început este normal ca detectoarele să fie încă goale.
+Oprirea cu Ctrl+C în terminalul demo închide componentele proprii după consumarea
+ultimului cadru; brokerul extern rămâne activ.
+
+## Urmărirea unei măsurători
 
 | Eveniment | Ce confirmă |
 |---|---|
-| `SUMO_READ` | Adaptorul a citit detectorul prin TraCI |
-| `MQTT_PUBLISH` | Procesul senzor începe publicarea pe topicul direcției |
+| `SUMO_READ` | Adaptorul a citit și agregat datele din SUMO |
+| `MQTT_PUBLISH` | Senzorul începe publicarea pe topicul direcției |
 | `MQTT_PUBACK` | Brokerul a confirmat publicarea cu QoS 1 |
-| `MQTT_OBSERVED` | Abonatul independent a primit mesajul de la broker |
+| `MQTT_OBSERVED` | Abonatul independent a primit mesajul |
 | `GATEWAY_RECEIVE` | Gateway-ul a primit și validat mesajul |
-| `GATEWAY_STORED` | Gateway-ul a salvat măsurătoarea în SQLite |
+| `GATEWAY_STORED` | Măsurătoarea a fost salvată în SQLite |
 
-Alege un `message_id` din jurnal, de forma `identificator-rulare:E2_N:42`, și caută exact același șir în cele trei jurnale:
+Alege un `message_id`, de exemplu `identificator-rulare:E2_N:42`, și caută-l
+în toate cele trei jurnale.
+
+PowerShell:
+
+```powershell
+Select-String -SimpleMatch 'identificator-rulare:E2_N:42' -Path data/runtime/sumo-mqtt.log,data/runtime/mqtt.log,data/runtime/gateway.log -Encoding utf8
+```
+
+Bash:
 
 ```bash
 grep -F 'identificator-rulare:E2_N:42' data/runtime/sumo-mqtt.log data/runtime/mqtt.log data/runtime/gateway.log
 ```
 
-Înlocuiește exemplul cu un identificator din rularea ta. În fiecare etapă verifici același `topic`, `vehicle_count`, `jam_length_m`, `sim_time_s` și restul câmpurilor din `payload`. Timestamp-urile din jurnal sunt ale calculatorului; `sim_time_s` este timpul simulatorului.
+Verifică același topic și payload la toate etapele. Timestamp-urile UTC sunt ale
+calculatorului, iar `sim_time_s` aparține simulatorului. Monitorul și gateway-ul
+sunt abonați independenți; ordinea lor față de PUBACK poate varia.
 
-Observatorul și gateway-ul primesc separat de la broker. Observatorul nu este intermediar între broker și gateway. PUBACK-ul și livrările către abonați se pot vedea în ordine diferită în jurnale. Confirmarea salvării este evenimentul `GATEWAY_STORED`.
+[exemplu-transmisie.jsonl](exemplu-transmisie.jsonl) păstrează un exemplu capturat
+din scenariul inițial, înaintea adăugării benzilor și virajelor.
 
-Un exemplu capturat dintr-o rulare efectivă este în [exemplu-transmisie.jsonl](exemplu-transmisie.jsonl): același mesaj în toate cele șase evenimente.
+## Materiale pentru prezentare
 
-## Ce păstrăm pentru prezentare
+- Imaginea intersecției și măsurătorile care se schimbă.
+- Jurnalele aceleiași rulări și același payload în cele șase evenimente.
+- Înregistrările SQLite: 120 pe direcție pentru o rulare sănătoasă de 120 de pași.
+- Opțional `broker.log`, când brokerul este pornit de demo; serviciul extern
+  folosește propriul mecanism de jurnalizare.
 
-- O captură cu intersecția în SUMO-GUI și măsurătorile care se schimbă.
-- Jurnalele `sumo-mqtt.log`, `mqtt.log`, `gateway.log` și `broker.log` din aceeași rulare.
-- O măsurătoare cu același identificator și payload în toate etapele.
-- Numărul de înregistrări pe direcție din SQLite: pentru 120 de pași, 120 pe fiecare direcție dacă toate procesele au funcționat.
-
-`broker.log` include și evenimentele protocolului Mosquitto, deoarece configurația activează `log_type all`. Pentru inspecția JSON-ului MQTT poți folosi și `mosquitto_sub`, conform instrucțiunilor din `pornire.md`.
-
-Această demonstrație dovedește colectarea și transmiterea. Evaluarea fluidizării traficului va necesita implementarea controlului adaptiv și compararea sa cu programul fix.
+Demonstrația verifică transmiterea datelor din intersecție către gateway.
+Semaforizarea urmează programul fix din SUMO. Pentru cereri diferite și
+reproducerea traficului, vezi [experimente.md](experimente.md).

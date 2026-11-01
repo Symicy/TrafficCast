@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<additional>
+    <laneAreaDetector id="E2_N_0" lane="N_in_0" pos="-151" endPos="-1" period="1" file="results/e2.xml" timeThreshold="1" speedThreshold="1.39" jamThreshold="10"/>
+    <laneAreaDetector id="E2_N_1" lane="N_in_1" pos="-151" endPos="-1" period="1" file="results/e2.xml" timeThreshold="1" speedThreshold="1.39" jamThreshold="10"/>
+    <laneAreaDetector id="E2_E_0" lane="E_in_0" pos="-151" endPos="-1" period="1" file="results/e2.xml" timeThreshold="1" speedThreshold="1.39" jamThreshold="10"/>
+    <laneAreaDetector id="E2_E_1" lane="E_in_1" pos="-151" endPos="-1" period="1" file="results/e2.xml" timeThreshold="1" speedThreshold="1.39" jamThreshold="10"/>
+    <laneAreaDetector id="E2_S_0" lane="S_in_0" pos="-151" endPos="-1" period="1" file="results/e2.xml" timeThreshold="1" speedThreshold="1.39" jamThreshold="10"/>
+    <laneAreaDetector id="E2_S_1" lane="S_in_1" pos="-151" endPos="-1" period="1" file="results/e2.xml" timeThreshold="1" speedThreshold="1.39" jamThreshold="10"/>
+    <laneAreaDetector id="E2_W_0" lane="W_in_0" pos="-151" endPos="-1" period="1" file="results/e2.xml" timeThreshold="1" speedThreshold="1.39" jamThreshold="10"/>
+    <laneAreaDetector id="E2_W_1" lane="W_in_1" pos="-151" endPos="-1" period="1" file="results/e2.xml" timeThreshold="1" speedThreshold="1.39" jamThreshold="10"/>
+    <inductionLoop id="E1_N_out_0" lane="N_out_0" pos="10" period="1" file="results/e1.xml"/>
+    <inductionLoop id="E1_N_out_1" lane="N_out_1" pos="10" period="1" file="results/e1.xml"/>
+    <inductionLoop id="E1_E_out_0" lane="E_out_0" pos="10" period="1" file="results/e1.xml"/>
+    <inductionLoop id="E1_E_out_1" lane="E_out_1" pos="10" period="1" file="results/e1.xml"/>
+    <inductionLoop id="E1_S_out_0" lane="S_out_0" pos="10" period="1" file="results/e1.xml"/>
+    <inductionLoop id="E1_S_out_1" lane="S_out_1" pos="10" period="1" file="results/e1.xml"/>
+    <inductionLoop id="E1_W_out_0" lane="W_out_0" pos="10" period="1" file="results/e1.xml"/>
+    <inductionLoop id="E1_W_out_1" lane="W_out_1" pos="10" period="1" file="results/e1.xml"/>
+</additional>
